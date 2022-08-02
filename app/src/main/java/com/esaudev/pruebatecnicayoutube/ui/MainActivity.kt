@@ -5,12 +5,17 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.esaudev.pruebatecnicayoutube.R
 import com.esaudev.pruebatecnicayoutube.databinding.ActivityMainBinding
 import com.esaudev.pruebatecnicayoutube.domain.extension.load
 import com.esaudev.pruebatecnicayoutube.domain.model.RandomUser
 import com.esaudev.pruebatecnicayoutube.domain.util.Resource
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -37,7 +42,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun subscribeViewModel() {
-        viewModel.randomUserState.observe(this) { result ->
+        /*viewModel.randomUserState.observe(this) { result ->
             when(result) {
                 is Resource.Success -> result.data?.let { bindUserData(it) }
                 is Resource.Error -> handleError()
@@ -46,6 +51,27 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.isLoading.observe(this) {
             handleLoadingState(it)
+        }*/
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { uiState ->
+                    uiState.randomUserData?.let {
+                        bindUserData(it)
+                    }
+                    handleLoadingState(uiState.isLoading)
+                }
+            }
+        }
+
+        lifecycleScope.launchWhenStarted {
+            viewModel.eventFlow.collect { coinEvent ->
+                when (coinEvent) {
+                    is MainViewModel.MainViewEvent.DisplayError -> {
+                        Toast.makeText(this@MainActivity, "An unknown error occurred", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
     }
 
