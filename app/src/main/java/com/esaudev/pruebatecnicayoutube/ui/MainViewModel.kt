@@ -20,8 +20,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val repository: RandomUserRepository,
-
+    private val repository: RandomUserRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<MainViewState>(MainViewState())
@@ -71,6 +70,18 @@ class MainViewModel @Inject constructor(
         val hasError: Boolean = false,
         val isLoading: Boolean = true
     )
+
+    /*
+    sealed class MainViewState {
+        data class Success(
+            val randomUserData: RandomUser
+        ): MainViewState()
+
+        object Loading: MainViewState()
+
+        object Error: MainViewState()
+    }
+    */
 
     sealed class MainViewEvent {
         object DisplayError: MainViewEvent()
